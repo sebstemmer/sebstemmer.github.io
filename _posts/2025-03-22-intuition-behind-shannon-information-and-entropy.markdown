@@ -1,8 +1,8 @@
 ---
 layout: post
 title: "Intuition Behind Shannon Information and Entropy"
-date: 2025-03-22
-categories: jekyll update
+date: 2025-03-28
+categories: data science fundamentals
 ---
 
 <img src="/assets/images/throwing_coins.png" alt="Throwing coins." width="500" height="300" style="display: block; margin-left: auto; margin-right: auto; margin-bottom: 2rem;">
