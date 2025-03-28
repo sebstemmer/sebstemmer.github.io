@@ -4,4 +4,4 @@ title: About
 permalink: /about/
 ---
 
-Hey ich bin Sebastian!
+I am Sebastian, a Principal Software Engineer and team lead based in Berlin. 
