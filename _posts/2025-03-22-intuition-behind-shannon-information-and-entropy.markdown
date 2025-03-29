@@ -7,7 +7,7 @@ categories: data science fundamentals
 
 <img src="/assets/images/throwing_coins.png" alt="Throwing coins." width="500" height="300" style="display: block; margin-left: auto; margin-right: auto; margin-bottom: 2rem;">
 
-In this blog post I will provide you with intuition for the terms information and entropy from [Shannon's](https://de.wikipedia.org/wiki/Claude_Shannon) information theory.
+The cross-entropy loss is a common loss function in data science. It is closely related to the concept of entropy from [Shannon's](https://de.wikipedia.org/wiki/Claude_Shannon) information theory. Since Shannon entropy is based on the concept of Shannon information, developing an intuition for both is essential to understanding cross-entropy loss in data science. In this blog post, we will analyze a simple probabilistic example to build this intuition and derive the mathematical form of Shannon information and entropy.
 
 Let's consider an i.i.d. random variable, such as the outcome of flipping two (not necessarily fair) coins
 
@@ -97,6 +97,8 @@ The self-information of a realization is specific to that realization. For a pro
 $$ H(X) = E[I(X)] = \sum_{x \in X}{p_x \cdot I(p_x)} $$
 
 In Shannon's information theory, $$ H(X) $$ is referred to as __entropy__. Based on our developed intuition, entropy describes the predictability of a random variable $$ X $$. We can also say that entropy measures how uncertain the outcome of a random variable is on average.
+
+We analyzed a simple dual coin flip to develop a profound intuition for Shannon information. By defining several criteria that this information must satisfy, we derived its mathematical form (4). Building on this, we then defined and gained a clearer understanding of Shannon entropy $$ H(X) $$.
 
 Sources:
 
