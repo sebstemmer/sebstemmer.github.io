@@ -43,24 +43,24 @@ As raw training data, we use the plain text version of Simple English Wikipedia 
 2. We remove punctuation such as *commas*, *colons*, etc., and convert all letters to lowercase.
 3. Each sentence is then split into a list of words, resulting in a list of sentences, where each sentence is itself a list of words.
 4. Next, we create the training data using the full vocabulary. We define a context window size, 
-$$ n_{CW} $$, which determines how many words we look ahead and behind the target word (e.g., with $$ n_{CW} = 4 $$, we can have up to 8 context words—4 before and 4 after the target word). For each sentence, we select all words as potential target words. Each target word can have up to $$ 2 n_{CW} $$ context words. This number may be smaller if the sentence is short or the target word is near the beginning or end of the sentence. If a target word has zero context words, we discard it.
+$$ C $$, which determines how many words we look ahead and behind the target word (e.g., with $$ C = 4 $$, we can have up to 8 context words—4 before and 4 after the target word). For each sentence, we select all words as potential target words. Each target word can have up to $$ 2 C $$ context words. This number may be smaller if the sentence is short or the target word is near the beginning or end of the sentence. If a target word has zero context words, we discard it.
 5. For each word that appears in the training data, we count how many windows (i.e., occurrences in target-context pairs) it appears in and record this frequency. The vocabulary is then sorted by these counts.
-6. To trim rare words, we retain only the $$ n_V $$ most frequent ones (with frequency defined as in step 5). All other words are removed from the training data, and any training pair that lacks a valid target word or has an empty context is discarded.
+6. To trim rare words, we retain only the $$ V $$ most frequent ones (with frequency defined as in step 5). All other words are removed from the training data, and any training pair that lacks a valid target word or has an empty context is discarded.
 7. We repeat step 5 on the filtered training data (i.e., without infrequent words) and store the updated word frequencies in our vocabulary.
 8. We shuffle the training data randomly to ensure that the model does not learn any unintended ordering patterns.
 
-We use a context window size of $$ n_{CW} = 4 $$, meaning the context window consists of a maximum of 8 words. We choose $$ n_V = 30,000 $$, so only the 30,000 most frequent words are considered. These choices result in 27,784,412 training pairs after applying all the preprocessing steps.
+We use a context window size of $$ C = 4 $$, meaning the context window consists of a maximum of 8 words. We choose $$ V = 30,000 $$, so only the 30,000 most frequent words are considered. These choices result in 27,784,412 training pairs after applying all the preprocessing steps.
 
 ### Training
 
 Throughout this section, we explicitly state the dimensions of tensors at each step. This helps us maintain clarity and avoid confusion.
 
-To prepare our training data in a standardized way and enable automatic batching with batch size $$ n_B $$, we implement a PyTorch <code>Dataset</code> (see [[6](https://docs.pytorch.org/tutorials/beginner/basics/data_tutorial.html)]). As described in the preprocessing section, context windows may vary in size. To standardize the input, all context windows are padded to a fixed length of $$ 2 n_{CW} $$ using a special padding index of $$ n_V $$ (in our case 30,000).
+To prepare our training data in a standardized way and enable automatic batching with batch size $$ B $$, we implement a PyTorch <code>Dataset</code> (see [[6](https://docs.pytorch.org/tutorials/beginner/basics/data_tutorial.html)]). As described in the preprocessing section, context windows may vary in size. To standardize the input, all context windows are padded to a fixed length of $$ 2 C $$ using a special padding index of $$ V $$ (in our case 30,000).
 
 As described above, in our model we need to average only the embedding vectors corresponding to the non-padded context indices. In a [previous blog post](https://www.sebstemmer.com/data/science/implementation/2025/05/08/averaging-m-out-of-n-vectors-using-pytorch.html), we demonstrated how to average 
-$$ M $$ out of $$ N $$ vectors. In our case, $$ N = 2 n_{CW} $$, while $$ M $$ corresponds to the actual number of context words. To apply this method, we construct a normed mask for each training sample. This mask contains ones up to the index representing the number of context words in the sample, and zeros thereafter.
+$$ M $$ out of $$ N $$ vectors. In our case, $$ N = 2 C $$, while $$ M $$ corresponds to the actual number of context words. To apply this method, we construct a normed mask for each training sample. This mask contains ones up to the index representing the number of context words in the sample, and zeros thereafter.
 
-The creation of the padded, fixed-length context input, as well as the corresponding normed mask, takes place within the <code>__getitem__</code> method of the PyTorch <code>Dataset</code>. This method returns three elements: the padded context input (dimension $$ [n_B, 2 n_{CW}] $$), the normalized mask (dimension $$ [n_B, 1, 2 n_{CW}] $$), and the target word index (dimension $$ [n_B] $$)—together forming a single training pair for our model.
+The creation of the padded, fixed-length context input, as well as the corresponding normed mask, takes place within the <code>__getitem__</code> method of the PyTorch <code>Dataset</code>. This method returns three elements: the padded context input (dimension $$ [B, 2 C] $$), the normalized mask (dimension $$ [B, 1, 2 C] $$), and the target word index (dimension $$ [B] $$)—together forming a single training pair for our model.
 
 Now that we've prepared the training data for our model, it's time to look into the model itself. Note that PyTorch uses row vectors as inputs, meaning it follows a row-major format. This means that the matrix-vector multiplication discussed in the section *Core Ideas* is implemented as a vector-matrix multiplication, using the identity:
 
@@ -76,15 +76,15 @@ Additionally, we use PyTorch's <code>Embedding</code> layer (see [[8](https://do
     )
 {% endhighlight %}
 
-The idea here is that multiplying a one-hot encoded vector with a matrix simply retrieves a specific row from that matrix. Instead of performing this operation explicitly—which introduces unnecessary computational and memory overhead—we use the <code>Embedding</code> layer to retrieve the row directly. We use $$ n_{H} = 300 $$ neurons in our only hidden layer. 
+The idea here is that multiplying a one-hot encoded vector with a matrix simply retrieves a specific row from that matrix. Instead of performing this operation explicitly—which introduces unnecessary computational and memory overhead—we use the <code>Embedding</code> layer to retrieve the row directly. We use $$ H = 300 $$ neurons in our only hidden layer. 
 
-After embedding our padded context input of dimension $$ [n_B, 2n_{CW}] $$, we obtain a matrix of dimension $$ [n_B, 2n_{CW}, n_{H}] $$. This matrix contains the embedding vectors corresponding to each input index in the context window.
+After embedding our padded context input of dimension $$ [B, 2C] $$, we obtain a matrix of dimension $$ [B, 2C, H] $$. This matrix contains the embedding vectors corresponding to each input index in the context window.
 
 {% highlight python %}
     hidden: torch.Tensor = self.input_to_hidden(x)
 {% endhighlight %}
 
-Next we have to average those vectors utilizing the pre-calculated normed mask using a vector-matrix multiplication (see the [previous blog post](https://www.sebstemmer.com/data/science/implementation/2025/05/08/averaging-m-out-of-n-vectors-using-pytorch.html) and identity (1)). This results in a vector of dimension $$ [n_B, 1, n_{H}] $$. 
+Next we have to average those vectors utilizing the pre-calculated normed mask using a vector-matrix multiplication (see the [previous blog post](https://www.sebstemmer.com/data/science/implementation/2025/05/08/averaging-m-out-of-n-vectors-using-pytorch.html) and identity (1)). This results in a vector of dimension $$ [B, 1, H] $$. 
 
 {% highlight python %}
     averaged_hidden: torch.Tensor = torch.matmul(normed_mask, hidden)
@@ -106,11 +106,11 @@ After this last step
         return self.hidden_to_output(averaged_hidden.squeeze(1))
 {% endhighlight %}    
 
-the dimension of the model's output is $$ [n_B, n_V] $$.
+the dimension of the model's output is $$ [B, V] $$.
 
 We use PyTorch’s CrossEntropyLoss (see [[9](https://docs.pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html)]), which expects **raw logits** as input since it applies **softmax** internally.
 
-The training is performed on an *Apple M2 Max* with *96 GB* of RAM, leveraging Apple's MPS (see [[10](https://developer.apple.com/documentation/metalperformanceshaders)]). Utilizing a batch size of $$ n_B = 2048 $$ and a learning rate of $$ 5 $$ enables fast computation and stable convergence.
+The training is performed on an *Apple M2 Max* with *96 GB* of RAM, leveraging Apple's MPS (see [[10](https://developer.apple.com/documentation/metalperformanceshaders)]). Utilizing a batch size of $$ B = 2048 $$ and a learning rate of $$ 5 $$ enables fast computation and stable convergence.
 
 We calculate the average loss per epoch and plot it over the number of epochs. The loss is steadily decreasing.
 
