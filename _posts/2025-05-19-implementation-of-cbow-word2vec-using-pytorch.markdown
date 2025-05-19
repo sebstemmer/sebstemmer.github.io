@@ -7,7 +7,7 @@ categories: data science implementation
 
 <img src="/assets/images/cbow/c_bow.png" alt="letter c and a bow" width="500" height="auto" style="display: block; margin-left: auto; margin-right: auto; margin-bottom: 2rem;">
 
-In natural language processing (NLP), creating **word embeddings**-real-valued vector representations of words—is essential for tasks such as semantic search and sentiment analysis. In this blog post, we will implement and analyze the **Continuous Bag of Words (CBOW)** algorithm, one of the models introduced in the Word2vec paper (see [[1](https://arxiv.org/abs/1301.3781)] and [[2](https://arxiv.org/abs/1310.4546)]). 
+In natural language processing (NLP), creating **word embeddings**—real-valued vector representations of words—is essential for tasks such as semantic search and sentiment analysis. In this blog post, we will implement and analyze the **Continuous Bag of Words (CBOW)** algorithm, one of the models introduced in the Word2vec paper (see [[1](https://arxiv.org/abs/1301.3781)] and [[2](https://arxiv.org/abs/1310.4546)]). 
 
 We begin by discussing the *Core Ideas* behind the CBOW model, followed by an explanation of the *Preprocessing* steps applied to the raw data. In the *Training* section, we present a **PyTorch** implementation of the model. Finally, in the *Inference and Evaluation* section, we explore some resulting word embeddings and interesting relationships between them.
 
