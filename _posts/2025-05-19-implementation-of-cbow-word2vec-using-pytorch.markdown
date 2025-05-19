@@ -23,7 +23,7 @@ The underlying idea of CBOW is captured by the phrase *"a word is characterized 
 
 Let's take the word **"create"** as our **target word**. *"The company it keeps"*-**"I"**, **"can"**, **"word"**, and **"embeddings"**-form its context. This group of surrounding words is called the **context window**, and the words within it are referred to as **context words**.
 
-The architecture of CBOW (visualized below-taken from [[1](https://arxiv.org/abs/1301.3781)] is designed to predict the target word from its context words. For each context window, we one-hot encode the context words. We then map these one-hot vectors to a **hidden layer** using a shared **linear transformation without bias**—that is, all context words are projected using the same weight matrix.
+The architecture of CBOW (visualized below—taken from [[1](https://arxiv.org/abs/1301.3781)] is designed to predict the target word from its context words. For each context window, we one-hot encode the context words. We then map these one-hot vectors to a **hidden layer** using a shared **linear transformation without bias**—that is, all context words are projected using the same weight matrix.
 Next, we average the resulting projected vectors to obtain a single context representation. This vector is passed through an **output layer**—another linear transformation without bias—producing a vector of size equal to the vocabulary size.
 This vector represents the **logits** for the target word prediction. Since we're dealing with a multi-class classification problem, we apply a **softmax** to the logits and optimize the model using **cross-entropy loss**. Note that the architecture does not account for the distance of the context words from the target word; all context words are treated equally.
 
